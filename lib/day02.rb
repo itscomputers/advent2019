@@ -22,7 +22,7 @@ class Day02 < Solver
     [program.first, *inputs] + program[inputs.count+1..-1]
   end
 
-  def process(program, inputs=nil, length=4)
+  def process(program=data, inputs=nil, length=4)
     program = apply_inputs(program, inputs) if inputs
     pointer = 0
 
@@ -35,7 +35,6 @@ class Day02 < Solver
   end
 
   def run_one
-    return process(@data) if @data
     process(data, [12, 2]).first
   end
 
