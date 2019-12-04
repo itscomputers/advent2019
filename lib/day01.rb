@@ -2,7 +2,7 @@ require_relative 'solver'
 
 class Day01 < Solver
   def get_data
-    open_file { |f| f.read.split }.map(&:to_i)
+    File.readlines(file_name).map(&:to_i)
   end
 
   def fuel(mass)

@@ -11,10 +11,6 @@ class Solver
     "data/day#{self.class.to_s[3..4]}.txt"
   end
 
-  def open_file
-    File.open(file_name)
-  end
-
   def get_data
     raise NotImplementedError
   end

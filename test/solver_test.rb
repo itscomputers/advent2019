@@ -10,10 +10,6 @@ class SolutionTest < Minitest::Test
     assert_equal @solver.file_name, 'data/dayve.txt'
   end
 
-  def test_responds_to_open_file
-    assert_respond_to @solver, :open_file
-  end
-
   def test_responds_to_get_data
     assert_respond_to @solver, :get_data
   end
