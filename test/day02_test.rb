@@ -26,7 +26,7 @@ class TestDay02 < MiniTest::Test
 
   def test_bezout_solution
     assert_equal(
-      @differences.zip(@day.bezout_solution).map { |t| t.reduce(1, :*) }.sum,
+      @differences.zip(@day.linear_diophantine_solution).map { |t| t.reduce(1, :*) }.sum,
       @day.desired_output - @day.initial_output
     )
   end

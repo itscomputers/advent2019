@@ -1,6 +1,6 @@
 require_relative 'solver'
 require_relative 'utils'
-require_relative 'utils/bezout'
+require_relative 'utils/linear_diophantine'
 
 class Day02 < Solver
   def get_data
@@ -40,7 +40,7 @@ class Day02 < Solver
   end
 
   def run_two
-    return Utils.vector_dot([100, 1], bezout_solution)
+    return Utils.vector_dot([100, 1], linear_diophantine_solution)
   rescue 'NotArithmeticSequences'
     (0..99).to_a.product((0..99).to_a).each do |inputs|
       if process(data, inputs).first == desired_output
@@ -59,7 +59,6 @@ class Day02 < Solver
   end
 
   def arithmetic_differences
-    return @arithmetic_differences if @arithmetic_differences
     prevs = [initial_output, initial_output]
     differences = (1..99).map do |i|
       currs = [process(data, [i, 0]).first, process(data, [0, i]).first]
@@ -68,12 +67,15 @@ class Day02 < Solver
       diffs
     end.uniq
     raise 'NotArithmeticSequences' unless differences.count == 1
-    @arithmetic_differences = differences.first
+    differences.first
   end
 
-  def bezout_solution
-    Bezout
-      .new(*arithmetic_differences)
-      .solutions_in_range(desired_output - initial_output, [0, 99], [0, 99]).first
+  def linear_diophantine_solution
+    LinearDiophantine.new(
+      *arithmetic_differences,
+      desired_output - initial_output,
+      x_range: (0..99),
+      y_range: (0..99)
+    ).solutions_in_range.first
   end
 end
