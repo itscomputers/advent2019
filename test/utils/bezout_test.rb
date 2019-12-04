@@ -1,5 +1,6 @@
 require 'test_helper'
-require_relative "../../lib/utils/bezout"
+require_relative '../../lib/utils'
+require_relative '../../lib/utils/bezout'
 
 class TestBezout < MiniTest::Test
   def setup
@@ -11,17 +12,11 @@ class TestBezout < MiniTest::Test
   end
 
   def test_primary_solution
-    assert_equal(
-      [@a, @b].zip(@bezout.primary_solution).map { |t| t.reduce(1, :*) }.sum,
-      @d
-    )
+    assert_equal Utils.vector_dot([@a, @b], @bezout.primary_solution), @d
   end
 
   def test_first_solution
-    assert_equal(
-      [@a, @b].zip(@bezout.first_solution(@c)).map { |t| t.reduce(1, :*) }.sum,
-      @c
-    )
+    assert_equal Utils.vector_dot([@a, @b], @bezout.first_solution(@c)), @c
   end
 
   def test_lowers_and_uppers_and_solutions
@@ -38,7 +33,7 @@ class TestBezout < MiniTest::Test
       assert_operator x_upper, :>=, x
       assert_operator y_lower, :<=, y
       assert_operator y_upper, :>=, y
-      assert_equal @a * x + @b * y, @c
+      assert_equal Utils.vector_dot([@a, @b], [x, y]), @c
       assert_includes @bezout.solutions_in_range(@c, [x_lower, x_upper], [y_lower, y_upper]), [x, y]
     end
   end

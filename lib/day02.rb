@@ -1,4 +1,5 @@
 require_relative 'solver'
+require_relative 'utils'
 require_relative 'utils/bezout'
 
 class Day02 < Solver
@@ -39,12 +40,11 @@ class Day02 < Solver
   end
 
   def run_two
-    noun, verb = bezout_solution
-    return 100 * noun + verb
+    return Utils.vector_dot([100, 1], bezout_solution)
   rescue 'NotArithmeticSequences'
     (0..99).to_a.product((0..99).to_a).each do |inputs|
       if process(data, inputs).first == desired_output
-        return inputs.zip([100, 1]).map { |t| t.reduce(1, :*) }.sum
+        return Utils.dot_product(*inputs)
       end
     end
     100 * noun + verb

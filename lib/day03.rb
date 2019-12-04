@@ -1,4 +1,5 @@
 require_relative 'solver'
+require_relative 'utils'
 
 class Day03 < Solver
   def get_data
@@ -52,17 +53,13 @@ class Day03 < Solver
     path.split(',').each_with_index do |dir_str, idx|
       dir, num = parse_move(dir_str).values
       (1..num).each do |j|
-        curr = add_points(prev, dir)
+        curr = Utils.vector_add(prev, dir)
         points[curr] ||= signal_delay + j
         prev = curr
       end
       signal_delay += num
     end
     points
-  end
-
-  def add_points(u, v)
-    u.zip(v).map(&:sum)
   end
 end
 
