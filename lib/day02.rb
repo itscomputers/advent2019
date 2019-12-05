@@ -44,10 +44,9 @@ class Day02 < Solver
   rescue 'NotArithmeticSequences'
     (0..99).to_a.product((0..99).to_a).each do |inputs|
       if process(data, inputs).first == desired_output
-        return Utils.dot_product(*inputs)
+        return Utils.dot_product([100, 1], *inputs)
       end
     end
-    100 * noun + verb
   end
 
   def desired_output
