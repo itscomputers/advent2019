@@ -57,88 +57,88 @@ class TestOrbitsGraph < MiniTest::Test
     @orbit_strings = ['COM)A', 'A)B', 'B)C', 'A)D', 'D)E']
   end
 
-  def test_get_and_set_planetary_object
+  def test_get_and_set_planet
     orbit_graph = OrbitGraph.new([])
-    refute orbit_graph.planetary_objects.key? 'not a planet'
-    not_a_planet = orbit_graph.get_planetary_object('not a planet')
-    assert_equal not_a_planet.class, PlanetaryObject
-    assert orbit_graph.planetary_objects.key? 'not a planet'
+    refute orbit_graph.planets.key? 'not a planet'
+    not_a_planet = orbit_graph.get_planet('not a planet')
+    assert_equal not_a_planet.class, Planet
+    assert orbit_graph.planets.key? 'not a planet'
   end
 
   def test_record_orbit_string
     orbit_graph = OrbitGraph.new([])
     orbit_graph.record_orbit_string('one)two')
-    assert orbit_graph.planetary_objects.key? 'one'
-    assert orbit_graph.planetary_objects.key? 'two'
+    assert orbit_graph.planets.key? 'one'
+    assert orbit_graph.planets.key? 'two'
     assert_equal(
-      orbit_graph.planetary_objects['two'].orbited_object,
-      orbit_graph.planetary_objects['one'],
+      orbit_graph.planets['two'].orbited,
+      orbit_graph.planets['one'],
     )
     orbit_graph.record_orbit_string('one)three')
-    assert orbit_graph.planetary_objects.key? 'three'
+    assert orbit_graph.planets.key? 'three'
     assert_equal(
-      orbit_graph.planetary_objects['three'].orbited_object,
-      orbit_graph.planetary_objects['one'],
+      orbit_graph.planets['three'].orbited,
+      orbit_graph.planets['one'],
     )
   end
 
   def test_build
     orbit_graph = OrbitGraph.new(@orbit_strings)
     orbit_graph.build
-    assert_equal orbit_graph.planetary_objects.keys, %w(COM A B C D E)
+    assert_equal orbit_graph.planets.keys, %w(COM A B C D E)
   end
 
   def test_total_orbits
     assert_equal OrbitGraph.new(@orbit_strings).build.total_orbits, 11
   end
 
-  def test_common_parent
+  def test_common_ancestor
     orbit_graph = OrbitGraph.new(@orbit_strings).build
-    object_a = orbit_graph.get_planetary_object('A')
-    object_c = orbit_graph.get_planetary_object('C')
-    object_e = orbit_graph.get_planetary_object('E')
-    assert_equal orbit_graph.common_parent([object_c, object_e]), object_a
+    planet_a = orbit_graph.get_planet('A')
+    planet_c = orbit_graph.get_planet('C')
+    planet_e = orbit_graph.get_planet('E')
+    assert_equal orbit_graph.common_ancestor([planet_c, planet_e]), planet_a
   end
 
   def test_distance
     orbit_graph = OrbitGraph.new(@orbit_strings).build
-    object_c = orbit_graph.get_planetary_object('C')
-    object_e = orbit_graph.get_planetary_object('E')
-    assert_equal orbit_graph.distance([object_c, object_e]), 2
+    planet_c = orbit_graph.get_planet('C')
+    planet_e = orbit_graph.get_planet('E')
+    assert_equal orbit_graph.distance([planet_c, planet_e]), 2
   end
 end
 
 class TestPlanetaryObject < MiniTest::Test
   def setup
-    @center_of_mass = PlanetaryObject.new(name: 'COM')
-    @object_a = PlanetaryObject.new(name: 'a', orbited_object: @center_of_mass)
-    @object_b = PlanetaryObject.new(name: 'b', orbited_object: @object_a)
+    @center_of_mass = Planet.new(name: 'COM')
+    @planet_a = Planet.new(name: 'a', orbited: @center_of_mass)
+    @planet_b = Planet.new(name: 'b', orbited: @planet_a)
   end
 
-  def test_can_set_orbited_object
-    assert_equal @object_a.orbited_object, @center_of_mass
-    @object_a.orbited_object = @object_b
-    assert_equal @object_a.orbited_object, @object_b
-    @object_a.orbited_object = @center_of_mass
-    assert_equal @object_a.orbited_object, @center_of_mass
+  def test_can_set_orbited_planet
+    assert_equal @planet_a.orbited, @center_of_mass
+    @planet_a.orbited= @planet_b
+    assert_equal @planet_a.orbited, @planet_b
+    @planet_a.orbited= @center_of_mass
+    assert_equal @planet_a.orbited, @center_of_mass
   end
 
   def test_is_center_of_mass
     assert @center_of_mass.is_center_of_mass?
-    refute @object_a.is_center_of_mass?
-    refute @object_b.is_center_of_mass?
+    refute @planet_a.is_center_of_mass?
+    refute @planet_b.is_center_of_mass?
   end
 
   def test_number_of_orbits
     assert_equal @center_of_mass.number_of_orbits, 0
-    assert_equal @object_a.number_of_orbits, 1
-    assert_equal @object_b.number_of_orbits, 2
+    assert_equal @planet_a.number_of_orbits, 1
+    assert_equal @planet_b.number_of_orbits, 2
   end
 
-  def parents
-    assert_equal @center_of_mass.parents, []
-    assert_equal @object_a.parents [@center_of_mass]
-    assert_equal @object_b.paretns [@object_b, @center_of_mass]
+  def ancestors
+    assert_equal @center_of_mass.ancestors, []
+    assert_equal @planet_a.ancestors [@center_of_mass]
+    assert_equal @planet_b.ancestors [@planet_b, @center_of_mass]
   end
 end
 

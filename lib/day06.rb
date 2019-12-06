@@ -16,20 +16,20 @@ class Day06 < Solver
 end
 
 class OrbitGraph
-  attr_reader :planetary_objects
+  attr_reader :planets
 
   def initialize(orbit_strings)
     @orbit_strings = orbit_strings
-    @planetary_objects = {}
+    @planets = {}
   end
 
-  def get_planetary_object(name)
-    @planetary_objects[name] ||= PlanetaryObject.new(name: name)
+  def get_planet(name)
+    @planets[name] ||= Planet.new(name: name)
   end
 
   def record_orbit_string(orbit_string)
-    orbited, orbiting = orbit_string.split(')').map(&method(:get_planetary_object))
-    orbiting.orbited_object = orbited
+    orbited_planet, orbiting_planet = orbit_string.split(')').map(&method(:get_planet))
+    orbiting_planet.orbited = orbited_planet
   end
 
   def build
@@ -38,46 +38,46 @@ class OrbitGraph
   end
 
   def total_orbits
-    @planetary_objects.values.map(&:number_of_orbits).sum
+    @planets.values.map(&:number_of_orbits).sum
   end
 
-  def common_parent(objects)
-    objects.map(&:parents).reduce(:&).first
+  def common_ancestor(planets)
+    planets.map(&:ancestors).reduce(:&).first
   end
 
-  def distance(two_objects)
-    parent = common_parent(two_objects)
-    two_objects.map { |obj| obj.parents.index(parent) }.sum
+  def distance(two_planets)
+    ancestor = common_ancestor(two_planets)
+    two_planets.map { |planet| planet.ancestors.index(ancestor) }.sum
   end
 
   def distance_by_name(two_names)
-    distance(two_names.map(&method(:get_planetary_object)))
+    distance(two_names.map(&method(:get_planet)))
   end
 end
 
 
-class PlanetaryObject
-  attr_reader :name, :orbited_object
+class Planet
+  attr_reader :name, :orbited
 
-  def initialize(name:, orbited_object: nil)
+  def initialize(name:, orbited: nil)
     @name = name
-    @orbited_object = orbited_object
+    @orbited = orbited
   end
 
-  def orbited_object=(orbited_object)
-    @orbited_object = orbited_object
+  def orbited=(planet)
+    @orbited = planet
   end
 
   def is_center_of_mass?
-    @orbited_object.nil?
+    @orbited.nil?
   end
 
   def number_of_orbits
-    parents.count
+    ancestors.count
   end
 
-  def parents
+  def ancestors
     return [] if is_center_of_mass?
-    @parents ||= [orbited_object, *orbited_object.parents]
+    @ancestors ||= [@orbited, *@orbited.ancestors]
   end
 end
