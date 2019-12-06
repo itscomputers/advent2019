@@ -16,7 +16,7 @@ class TestDay02 < MiniTest::Test
 
   def test_one
     @testing.each do |test_data, result|
-      assert_equal Day02.new(test_data).process, result
+      assert_equal Day02.new(test_data).run_one, result
     end
   end
 

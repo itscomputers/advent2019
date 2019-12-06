@@ -8,7 +8,9 @@ class TestLinearDiophantine < MiniTest::Test
     @b = rand(2..1000)
     @d = @a.gcd(@b)
     @c = rand(2..1000) * @d
-    @linear_diophantine = LinearDiophantine.new(@a, @b, @c, x_range: (0..1000), y_range: (0..1000))
+    @x_range = (0..1000)
+    @y_range = (0..1000)
+    @linear_diophantine = LinearDiophantine.new(@a, @b, @c, x_range: @x_range, y_range: @y_range)
   end
 
   def test_primary_solution
@@ -24,10 +26,10 @@ class TestLinearDiophantine < MiniTest::Test
     t_upper = @linear_diophantine.t_upper
     (t_lower..t_upper).each do |t|
       x, y = @linear_diophantine.solution(t)
-      assert_operator x_range.first, :<=, x
-      assert_operator x_range.last, :>=, x
-      assert_operator y_range.first, :<=, y
-      assert_operator y_range.last, :>=, y
+      assert_operator @x_range.first, :<=, x
+      assert_operator @x_range.last, :>=, x
+      assert_operator @y_range.first, :<=, y
+      assert_operator @y_range.last, :>=, y
       assert_equal Utils.vector_dot([@a, @b], [x, y]), @c
       assert_includes @bezout.solutions_in_range, [x, y]
     end

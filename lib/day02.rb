@@ -1,4 +1,5 @@
 require_relative 'solver'
+require_relative 'intcode_computer'
 require_relative 'utils'
 require_relative 'utils/linear_diophantine'
 
@@ -7,36 +8,9 @@ class Day02 < Solver
     File.read(file_name).split(',').map(&:to_i)
   end
 
-  def op
-    {
-      1 => lambda { |inputs| inputs.reduce(0, :+) },
-      2 => lambda { |inputs| inputs.reduce(1, :*) }
-    }
-  end
-
-  def process_instruction(program, pointer, length=4)
-    op_id, *input_pointers, output_pointer = program[pointer...pointer+length]
-    program[output_pointer] = op[op_id].call(input_pointers.map { |p| program[p] })
-  end
-
-  def apply_inputs(program, inputs)
-    [program.first, *inputs] + program[inputs.count+1..-1]
-  end
-
-  def process(program=data, inputs=nil, length=4)
-    program = apply_inputs(program, inputs) if inputs
-    pointer = 0
-
-    while program[pointer] != 99
-      process_instruction(program, pointer, length)
-      pointer += length
-    end
-
-    program
-  end
-
   def run_one
-    process(data, [12, 2]).first
+    return IntcodeComputer.new(data).run.result if @data
+    IntcodeComputer.new(apply_inputs(data, [12, 2])).run.result.first
   end
 
   def run_two
@@ -54,13 +28,19 @@ class Day02 < Solver
   end
 
   def initial_output
-    @initial_output ||= process(data).first
+    @initial_output ||= IntcodeComputer.new(data).run.result.first
+  end
+
+  def apply_inputs(program, inputs)
+    [program.first, *inputs] + program[inputs.count+1..-1]
   end
 
   def arithmetic_differences
     prevs = [initial_output, initial_output]
     differences = (1..99).map do |i|
-      currs = [process(data, [i, 0]).first, process(data, [0, i]).first]
+      currs = [[i, 0], [0, i]].map do |inputs|
+        IntcodeComputer.new(apply_inputs(data, inputs)).run.result.first
+      end
       diffs = currs.zip(prevs).map { |pair| pair.first - pair.last }
       prevs = currs
       diffs
