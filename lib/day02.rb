@@ -9,8 +9,8 @@ class Day02 < Solver
   end
 
   def run_one
-    return IntcodeComputer.new(data).run.result if @data
-    IntcodeComputer.new(apply_inputs(data, [12, 2])).run.result.first
+    return IntcodeComputer.new(program: data).run.result if @data
+    apply_inputs!(IntcodeComputer.new(program: data), [12, 2]).run.result.first
   end
 
   def run_two
@@ -28,18 +28,21 @@ class Day02 < Solver
   end
 
   def initial_output
-    @initial_output ||= IntcodeComputer.new(data).run.result.first
+    @initial_output ||= IntcodeComputer.new(program: data).run.result.first
   end
 
-  def apply_inputs(program, inputs)
-    [program.first, *inputs] + program[inputs.count+1..-1]
+  def apply_inputs!(intcode_computer, inputs)
+    inputs.each_with_index do |input, idx|
+      intcode_computer.set(idx + 1, input)
+    end
+    intcode_computer
   end
 
   def arithmetic_differences
     prevs = [initial_output, initial_output]
     differences = (1..99).map do |i|
       currs = [[i, 0], [0, i]].map do |inputs|
-        IntcodeComputer.new(apply_inputs(data, inputs)).run.result.first
+        apply_inputs!(IntcodeComputer.new(program: data), inputs).run.result.first
       end
       diffs = currs.zip(prevs).map { |pair| pair.first - pair.last }
       prevs = currs

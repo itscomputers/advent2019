@@ -5,7 +5,7 @@ class TestIntcodeComputer < MiniTest::Test
   def setup
     @program = [1,9,10,3,2,3,11,0,99,30,40,50]
     @result = [3500,9,10,70,2,3,11,0,99,30,40,50]
-    @computer = IntcodeComputer.new(@program)
+    @computer = IntcodeComputer.new(program: @program)
   end
 
   def test_add
@@ -25,7 +25,7 @@ class TestIntcodeComputer < MiniTest::Test
   def test_opcode_one
     @computer.reset
     assert_equal @computer.get(@computer.pointer), 1
-    assert_equal @computer.inputs, [9, 10, 3]
+    assert_equal @computer.op_inputs, [9, 10, 3]
     @computer.advance
     assert_equal @computer.get(3),  @computer.get(9) + @computer.get(10)
   end
@@ -33,7 +33,7 @@ class TestIntcodeComputer < MiniTest::Test
   def test_opcode_two
     @computer.reset.advance
     assert_equal @computer.get(@computer.pointer), 2
-    assert_equal @computer.inputs, [3, 11, 0]
+    assert_equal @computer.op_inputs, [3, 11, 0]
     @computer.advance
     assert_equal @computer.get(0), @computer.get(3) * @computer.get(11)
   end

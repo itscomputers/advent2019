@@ -31,7 +31,7 @@ class TestLinearDiophantine < MiniTest::Test
       assert_operator @y_range.first, :<=, y
       assert_operator @y_range.last, :>=, y
       assert_equal Utils.vector_dot([@a, @b], [x, y]), @c
-      assert_includes @bezout.solutions_in_range, [x, y]
+      assert_includes @linear_diophantine.solutions_in_range, [x, y]
     end
   end
 end

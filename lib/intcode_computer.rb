@@ -1,14 +1,16 @@
 class IntcodeComputer
   attr_reader :pointer, :result
 
-  def initialize(program)
+  def initialize(program:, inputs: [])
     @program = program
-    @result = program.map(&:dup)
+    @inputs = inputs
     @pointer = 0
+    @output = []
+    @result = program.map(&:dup)
   end
 
   def advance
-    opcode[:func].call(inputs)
+    opcode[:func].call(op_inputs)
     @pointer += opcode[:length] + 1
     self
   end
@@ -33,7 +35,7 @@ class IntcodeComputer
     }[get(@pointer)]
   end
 
-  def inputs
+  def op_inputs
     @program[@pointer+1..@pointer+opcode[:length]]
   end
 
