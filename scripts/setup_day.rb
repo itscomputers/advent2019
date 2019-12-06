@@ -12,7 +12,7 @@ end
 
 def create_test_files(day)
   File.open("test/day#{day}_test.rb", 'w+') do |file|
-    file.write(test_class(day, letter))
+    file.write(test_class(day))
   end
 end
 
