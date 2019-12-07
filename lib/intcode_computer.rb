@@ -2,7 +2,7 @@ class IntcodeComputer
   attr_reader :pointer, :result, :output
 
   def self.run(program:, inputs: nil, default_input: nil)
-    IntcodeComputer.new(
+    self.new(
       program: program,
       inputs: inputs,
       default_input: default_input
