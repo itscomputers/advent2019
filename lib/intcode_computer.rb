@@ -9,28 +9,47 @@ class IntcodeComputer
     ).run
   end
 
+  #---------------------------
+  # set and reset state
+  #---------------------------
+
   def initialize(program:, inputs: nil, default_input: nil)
     @program = program
     @inputs = inputs.to_enum
     @default_input = default_input
-    @result = program.map(&:dup)
-    @pointer = 0
-    @outputs = []
-    @terminated = false
+    set_initial_state
   end
 
-  def reset
-    @inputs = @inputs.to_a.to_enum
+  def set_initial_state
     @result = @program.map(&:dup)
     @pointer = 0
     @outputs = []
     @terminated = false
+  end
+
+  def reset_inputs
+    @inputs = @inputs.to_a.to_enum
+  end
+
+  def reset
+    reset_inputs
+    set_initial_state
     self
   end
 
-  def output
-    @outputs.last
+  def default_input=(value)
+    @default_input = value
   end
+
+  def next_input
+    return @inputs.next
+  rescue StopIteration
+    @default_input
+  end
+
+  #---------------------------
+  # run the program
+  #---------------------------
 
   def advance
     eval("#{instruction_op}(#{instruction_params})")
@@ -51,18 +70,12 @@ class IntcodeComputer
     self
   end
 
-  def default_input=(value)
-    @default_input = value
-  end
-
-  def next_input
-    return @inputs.next
-  rescue StopIteration
-    @default_input
+  def output
+    @outputs.last
   end
 
   #---------------------------
-  # instructions
+  # handle instruction
   #---------------------------
 
   def instruction_router
@@ -120,7 +133,7 @@ class IntcodeComputer
   end
 
   #---------------------------
-  # functions
+  # modify state
   #---------------------------
 
   def set(pointer, value)
@@ -138,10 +151,6 @@ class IntcodeComputer
   def move_pointer_to(value)
     @pointer = value
   end
-
-  #---------------------------
-  # operations
-  #---------------------------
 
   def add(params)
     jump = instruction_pointer_jump
