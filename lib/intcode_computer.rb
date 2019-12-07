@@ -38,7 +38,7 @@ class IntcodeComputer
   end
 
   def advance_to_next_output
-    while !@terminated
+    until @terminated
       break_after_advance = will_write_to_output
       advance
       break if break_after_advance
@@ -47,7 +47,7 @@ class IntcodeComputer
   end
 
   def run
-    advance while !@terminated
+    advance until @terminated
     self
   end
 
