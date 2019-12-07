@@ -1,5 +1,5 @@
 class IntcodeComputer
-  attr_reader :pointer, :result, :output
+  attr_reader :inputs, :output, :pointer, :result
 
   def self.run(program:, inputs: nil, default_input: nil)
     self.new(
@@ -44,6 +44,7 @@ class IntcodeComputer
   def reset
     @pointer = 0
     @outputs = []
+    @inputs = @inputs.to_a.to_enum
     @result = @program.map(&:dup)
     self
   end
@@ -140,23 +141,27 @@ class IntcodeComputer
   #---------------------------
 
   def one(params)
+    jump = instruction_pointer_jump
     set(params.last, params[0...-1].reduce(0, :+))
-    @pointer += instruction_pointer_jump
+    @pointer += jump
   end
 
   def two(params)
+    jump = instruction_pointer_jump
     set(params.last, params[0...-1].reduce(1, :*))
-    @pointer += instruction_pointer_jump
+    @pointer += jump
   end
 
   def three(params)
+    jump = instruction_pointer_jump
     set(params.first, next_input)
-    @pointer += instruction_pointer_jump
+    @pointer += jump
   end
 
   def four(params)
+    jump = instruction_pointer_jump
     @outputs = @outputs + params
-    @pointer += instruction_pointer_jump
+    @pointer += jump
   end
 
   def five(params)
@@ -176,13 +181,15 @@ class IntcodeComputer
   end
 
   def seven(params)
+    jump = instruction_pointer_jump
     set(params.last, (params.first < params[1]) ? 1 : 0)
-    @pointer += instruction_pointer_jump
+    @pointer += jump
   end
 
   def eight(params)
+    jump = instruction_pointer_jump
     set(params.last, (params.first == params[1]) ? 1 : 0)
-    @pointer += instruction_pointer_jump
+    @pointer += jump
   end
 end
 

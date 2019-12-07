@@ -15,6 +15,21 @@ class TestIntcodeComputer < MiniTest::Test
     assert_equal c.get(2), 1000
   end
 
+  def test_reset
+    program = [3, 0, 4, 0, 99]
+    c = computer(program, [666])
+    assert_equal c.result, program
+    assert_nil c.output
+    c.run
+    refute_equal c.result, program
+    refute_nil c.output
+    assert_raises(StopIteration) { c.inputs.next }
+    c.reset
+    assert_equal c.result, program
+    assert_nil c.output
+    assert_silent { c.inputs.next }
+  end
+
   def test_one
     c = computer([1, 5, 1, 4, 2, 3], [666])
     assert_equal c.instruction_raw_params, [5, 1, 4]
