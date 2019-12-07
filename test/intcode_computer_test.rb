@@ -20,13 +20,16 @@ class TestIntcodeComputer < MiniTest::Test
     c = computer(program, [666])
     assert_equal c.result, program
     assert_nil c.output
+    refute c.terminated
     c.run
     refute_equal c.result, program
     refute_nil c.output
+    assert c.terminated
     assert_raises(StopIteration) { c.inputs.next }
     c.reset
     assert_equal c.result, program
     assert_nil c.output
+    refute c.terminated
     assert_silent { c.inputs.next }
   end
 

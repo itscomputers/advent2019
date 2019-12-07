@@ -33,7 +33,7 @@ class Day07 < Solver
     end
 
     idx = 0
-    while computers.map(&:instruction_op_id).uniq != [99]
+    until computers.map(&:terminated).all?
       computer = computers[idx % 5]
       computer.default_input = default_input
       default_input = computer.advance_to_next_output.output

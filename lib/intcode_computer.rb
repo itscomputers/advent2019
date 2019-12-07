@@ -1,5 +1,5 @@
 class IntcodeComputer
-  attr_reader :inputs, :output, :pointer, :result
+  attr_reader :inputs, :output, :pointer, :result, :terminated
 
   def self.run(program:, inputs: nil, default_input: nil)
     self.new(
@@ -13,9 +13,19 @@ class IntcodeComputer
     @program = program
     @inputs = inputs.to_enum
     @default_input = default_input
+    @result = program.map(&:dup)
     @pointer = 0
     @outputs = []
-    @result = program.map(&:dup)
+    @terminated = false
+  end
+
+  def reset
+    @inputs = @inputs.to_a.to_enum
+    @result = @program.map(&:dup)
+    @pointer = 0
+    @outputs = []
+    @terminated = false
+    self
   end
 
   def output
@@ -28,7 +38,7 @@ class IntcodeComputer
   end
 
   def advance_to_next_output
-    while !final_instruction
+    while !@terminated
       break_after_advance = will_write_to_output
       advance
       break if break_after_advance
@@ -37,15 +47,7 @@ class IntcodeComputer
   end
 
   def run
-    advance while !final_instruction
-    self
-  end
-
-  def reset
-    @pointer = 0
-    @outputs = []
-    @inputs = @inputs.to_a.to_enum
-    @result = @program.map(&:dup)
+    advance while !@terminated
     self
   end
 
@@ -65,19 +67,16 @@ class IntcodeComputer
 
   def instruction_router
     {
-      1 => { :length => 3, :op => 'one' },
-      2 => { :length => 3, :op => 'two' },
-      3 => { :length => 1, :op => 'three' },
-      4 => { :length => 1, :op => 'four' },
-      5 => { :length => 2, :op => 'five' },
-      6 => { :length => 2, :op => 'six' },
-      7 => { :length => 3, :op => 'seven' },
-      8 => { :length => 3, :op => 'eight' },
+      1 => { :length => 4, :op => 'add' },
+      2 => { :length => 4, :op => 'multiply' },
+      3 => { :length => 2, :op => 'write_from_input' },
+      4 => { :length => 2, :op => 'write_to_output' },
+      5 => { :length => 3, :op => 'jump_if_true' },
+      6 => { :length => 3, :op => 'jump_if_false' },
+      7 => { :length => 4, :op => 'less_than' },
+      8 => { :length => 4, :op => 'equals' },
+      99 => { :length => 0, :op => 'halt_program' },
     }
-  end
-
-  def instruction_length
-    instruction_router[instruction_op_id][:length]
   end
 
   def instruction_op
@@ -85,7 +84,7 @@ class IntcodeComputer
   end
 
   def instruction_pointer_jump
-    instruction_length + 1
+    instruction_router[instruction_op_id][:length]
   end
 
   def instruction_raw
@@ -106,18 +105,14 @@ class IntcodeComputer
 
   def instruction_params
     [4, 5, 6].include?(instruction_op_id) ?
-      transform_params(instruction_raw_params) :
-      transform_params(instruction_raw_params[0...-1]) + [instruction_raw_params.last]
+      transform(instruction_raw_params) :
+      transform(instruction_raw_params[0...-1]) + [instruction_raw_params.last]
   end
 
-  def transform_params(params)
+  def transform(params)
     params.zip(instruction_modes).map do |pair|
       pair.last == '1' ? pair.first : get(pair.first)
     end
-  end
-
-  def final_instruction
-    instruction_op_id == 99
   end
 
   def will_write_to_output
@@ -136,60 +131,68 @@ class IntcodeComputer
     @result[pointer]
   end
 
+  def move_pointer_by(value)
+    @pointer = @pointer + value
+  end
+
+  def move_pointer_to(value)
+    @pointer = value
+  end
+
   #---------------------------
   # operations
   #---------------------------
 
-  def one(params)
+  def add(params)
     jump = instruction_pointer_jump
     set(params.last, params[0...-1].reduce(0, :+))
-    @pointer += jump
+    move_pointer_by(jump)
   end
 
-  def two(params)
+  def multiply(params)
     jump = instruction_pointer_jump
     set(params.last, params[0...-1].reduce(1, :*))
-    @pointer += jump
+    move_pointer_by(jump)
   end
 
-  def three(params)
+  def write_from_input(params)
     jump = instruction_pointer_jump
     set(params.first, next_input)
-    @pointer += jump
+    move_pointer_by(jump)
   end
 
-  def four(params)
+  def write_to_output(params)
     jump = instruction_pointer_jump
     @outputs = @outputs + params
-    @pointer += jump
+    move_pointer_by(jump)
   end
 
-  def five(params)
-    if params.first != 0
-      @pointer = params.last
-    else
-      @pointer += instruction_pointer_jump
-    end
+  def jump_if_true(params)
+    (params.first != 0) ?
+      move_pointer_to(params.last) :
+      move_pointer_by(instruction_pointer_jump)
   end
 
-  def six(params)
-    if params.first == 0
-      @pointer = params.last
-    else
-      @pointer += instruction_pointer_jump
-    end
+  def jump_if_false(params)
+    (params.first == 0) ?
+      move_pointer_to(params.last) :
+      move_pointer_by(instruction_pointer_jump)
   end
 
-  def seven(params)
+  def less_than(params)
     jump = instruction_pointer_jump
     set(params.last, (params.first < params[1]) ? 1 : 0)
-    @pointer += jump
+    move_pointer_by(jump)
   end
 
-  def eight(params)
+  def equals(params)
     jump = instruction_pointer_jump
     set(params.last, (params.first == params[1]) ? 1 : 0)
-    @pointer += jump
+    move_pointer_by(jump)
+  end
+
+  def halt_program(params)
+    @terminated = true
   end
 end
 
