@@ -1,13 +1,25 @@
 class IntcodeComputer
   attr_reader :pointer, :result, :output
 
+  def self.run(program:, inputs: nil, default_input: nil)
+    IntcodeComputer.new(
+      program: program,
+      inputs: inputs,
+      default_input: default_input
+    ).run
+  end
+
   def initialize(program:, inputs: nil, default_input: nil)
     @program = program
     @inputs = inputs.to_enum
     @default_input = default_input
     @pointer = 0
-    @output = []
+    @outputs = []
     @result = program.map(&:dup)
+  end
+
+  def output
+    @outputs.last
   end
 
   def advance
@@ -31,7 +43,7 @@ class IntcodeComputer
 
   def reset
     @pointer = 0
-    @output = []
+    @outputs = []
     @result = @program.map(&:dup)
     self
   end
@@ -143,7 +155,7 @@ class IntcodeComputer
   end
 
   def four(params)
-    @output = @output + params
+    @outputs = @outputs + params
     @pointer += instruction_pointer_jump
   end
 

@@ -9,18 +9,31 @@ class Day02 < Solver
   end
 
   def run_one
-    return IntcodeComputer.new(program: data).run.result if @data
-    apply_inputs!(IntcodeComputer.new(program: data), [12, 2]).run.result.first
+    return run_program.result if @data
+    run_program(inputs: [12, 2]).result.first
   end
 
   def run_two
     return Utils.vector_dot([100, 1], linear_diophantine_solution)
   rescue 'NotArithmeticSequences'
     (0..99).to_a.product((0..99).to_a).each do |inputs|
-      if process(data, inputs).first == desired_output
+      if run_program(inputs: inputs).result.first == desired_output
         return Utils.dot_product([100, 1], *inputs)
       end
     end
+  end
+
+  def run_program(inputs: nil)
+    IntcodeComputer.run(program: apply_inputs(data, inputs))
+  end
+
+  def apply_inputs(program, inputs)
+    return program if inputs.nil?
+
+    inputs.each_with_index do |input, idx|
+      program[idx + 1] = input
+    end
+    program
   end
 
   def desired_output
@@ -28,21 +41,14 @@ class Day02 < Solver
   end
 
   def initial_output
-    @initial_output ||= IntcodeComputer.new(program: data).run.result.first
-  end
-
-  def apply_inputs!(intcode_computer, inputs)
-    inputs.each_with_index do |input, idx|
-      intcode_computer.set(idx + 1, input)
-    end
-    intcode_computer
+    @initial_output ||= run_program.result.first
   end
 
   def arithmetic_differences
     prevs = [initial_output, initial_output]
     differences = (1..99).map do |i|
       currs = [[i, 0], [0, i]].map do |inputs|
-        apply_inputs!(IntcodeComputer.new(program: data), inputs).run.result.first
+        run_program(inputs: inputs).result.first
       end
       diffs = currs.zip(prevs).map { |pair| pair.first - pair.last }
       prevs = currs

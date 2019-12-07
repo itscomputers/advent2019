@@ -47,9 +47,9 @@ class TestIntcodeComputer < MiniTest::Test
     c = computer([4, 5, 1, 4, 2, 3], [666])
     assert_equal c.instruction_raw_params, [5]
     assert_equal c.instruction_params, [3]
-    assert_equal c.output, []
+    assert_nil c.output
     c.advance
-    assert_equal c.output, [3]
+    assert_equal c.output, 3
     assert_equal c.pointer, 2
   end
 

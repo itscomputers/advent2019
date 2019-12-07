@@ -17,11 +17,11 @@ class Day07 < Solver
   def from_sequence(inputs)
     default_input = 0
     inputs.map do |input|
-      default_input = IntcodeComputer.new(
+      default_input = IntcodeComputer.run(
         program: data,
         inputs: [input],
         default_input: default_input
-      ).run.output.last
+      ).output
     end
     default_input
   end
@@ -36,7 +36,7 @@ class Day07 < Solver
     while computers.map(&:instruction_op_id).uniq != [99]
       computer = computers[idx % 5]
       computer.default_input = default_input
-      default_input = computer.advance_to_next_output.output.last
+      default_input = computer.advance_to_next_output.output
       idx = idx + 1
     end
     default_input
