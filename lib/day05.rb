@@ -7,15 +7,15 @@ class Day05 < Solver
   end
 
   def run_one
-    IntcodeComputer.new(program: data, input: 1).run.output.last
+    run_program(1)
   end
 
   def run_two
-    IntcodeComputer.new(program: data, input: 5).run.output.last
+    run_program(5)
   end
 
   def run_program(input)
-    IntcodeComputer.new(program: data, input: input).run.output.last
+    IntcodeComputer.new(program: data, inputs: [input]).run.output.last
   end
 end
 

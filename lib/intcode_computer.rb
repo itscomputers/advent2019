@@ -1,9 +1,10 @@
 class IntcodeComputer
   attr_reader :pointer, :result, :output
 
-  def initialize(program:, input: nil)
+  def initialize(program:, inputs: nil, default_input: nil)
     @program = program
-    @input = input
+    @inputs = inputs.to_enum
+    @default_input = default_input
     @pointer = 0
     @output = []
     @result = program.map(&:dup)
@@ -15,17 +16,16 @@ class IntcodeComputer
   end
 
   def advance_to_next_output
-    output_count = @output.count
-    while @output.count == output_count
+    while !final_instruction
+      break_after_advance = will_write_to_output
       advance
+      break if break_after_advance
     end
     self
   end
 
   def run
-    while instruction_op_id != 99
-      advance
-    end
+    advance while !final_instruction
     self
   end
 
@@ -36,35 +36,39 @@ class IntcodeComputer
     self
   end
 
+  def default_input=(value)
+    @default_input = value
+  end
+
+  def next_input
+    return @inputs.next
+  rescue StopIteration
+    @default_input
+  end
+
   #---------------------------
   # instructions
   #---------------------------
 
-  def instruction_length
+  def instruction_router
     {
-      1 => 3,
-      2 => 3,
-      3 => 1,
-      4 => 1,
-      5 => 2,
-      6 => 2,
-      7 => 3,
-      8 => 3,
-      99 => -1,
-    }[instruction_op_id]
+      1 => { :length => 3, :op => 'one' },
+      2 => { :length => 3, :op => 'two' },
+      3 => { :length => 1, :op => 'three' },
+      4 => { :length => 1, :op => 'four' },
+      5 => { :length => 2, :op => 'five' },
+      6 => { :length => 2, :op => 'six' },
+      7 => { :length => 3, :op => 'seven' },
+      8 => { :length => 3, :op => 'eight' },
+    }
+  end
+
+  def instruction_length
+    instruction_router[instruction_op_id][:length]
   end
 
   def instruction_op
-    {
-      1 => 'one',
-      2 => 'two',
-      3 => 'three',
-      4 => 'four',
-      5 => 'five',
-      6 => 'six',
-      7 => 'seven',
-      8 => 'eight',
-    }[instruction_op_id]
+    instruction_router[instruction_op_id][:op]
   end
 
   def instruction_pointer_jump
@@ -99,6 +103,14 @@ class IntcodeComputer
     end
   end
 
+  def final_instruction
+    instruction_op_id == 99
+  end
+
+  def will_write_to_output
+    instruction_op_id == 4
+  end
+
   #---------------------------
   # functions
   #---------------------------
@@ -126,7 +138,7 @@ class IntcodeComputer
   end
 
   def three(params)
-    set(params.first, @input)
+    set(params.first, next_input)
     @pointer += instruction_pointer_jump
   end
 
