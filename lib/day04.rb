@@ -1,4 +1,5 @@
 require_relative 'solver'
+require_relative 'utils'
 
 class Day04 < Solver
   def get_data
@@ -37,7 +38,7 @@ class Day04 < Solver
   end
 
   def digit_counts(password)
-    (0..9).map { |d| [d, password.count(d.to_s)] }.to_h
+    password.split('').count_by(&:to_s)
   end
 
   def is_increasing(password)

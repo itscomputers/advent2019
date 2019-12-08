@@ -1,4 +1,5 @@
 require_relative 'solver'
+require_relative 'utils'
 
 class Day08 < Solver
   def get_data
@@ -63,15 +64,6 @@ class Image
     rows = rows.map { |r| r.gsub('0', ch0) } if ch0
     rows = rows.map { |r| r.gsub('1', ch1) } if ch1
     rows
-  end
-end
-
-module Enumerable
-  def count_by(&block)
-    each_with_object(Hash.new(0)) do |elem, memo|
-      value = block.call(elem)
-      memo[value] += 1
-    end
   end
 end
 
