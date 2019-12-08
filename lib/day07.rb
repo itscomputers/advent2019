@@ -15,15 +15,13 @@ class Day07 < Solver
   end
 
   def from_sequence(inputs)
-    default_input = 0
-    inputs.map do |input|
-      default_input = IntcodeComputer.run(
+    inputs.inject(0) do |default_input, input|
+      IntcodeComputer.run(
         program: data,
         inputs: [input],
         default_input: default_input
       ).output
     end
-    default_input
   end
 
   def from_sequence_with_feedback(inputs)
