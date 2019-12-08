@@ -6,13 +6,20 @@ class Day06 < Solver
     File.read(file_name).split
   end
 
+  def tree
+    @tree ||= Tree.new(data, edge_separator=')')
+  end
+
+  def names
+    @test_data ? %w(L D) : %w(YOU SAN)
+  end
+
   def run_one
-    Tree.new(data, edge_separator=')').nodes.values.map(&:number_of_ancestors).sum
+    tree.nodes.values.map(&:number_of_ancestors).sum
   end
 
   def run_two
-    return Tree.new(data, edge_separator=')').distance_by_name('L', 'D') if @test_data
-    Tree.new(data, edge_separator=')').distance_by_name('YOU', 'SAN')
+    tree.distance_by_name(*names)
   end
 end
 
