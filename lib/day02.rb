@@ -9,7 +9,7 @@ class Day02 < Solver
   end
 
   def run_one
-    return run_program.result if @data
+    return run_program.result if @test_data
     run_program(inputs: [12, 2]).result.first
   end
 

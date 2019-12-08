@@ -1,10 +1,10 @@
 class Solver
-  def initialize(data=nil)
-    @data = data
+  def initialize(test_data=nil)
+    @test_data = test_data
   end
 
   def data
-    @data || get_data
+    @test_data || get_data
   end
 
   def file_name

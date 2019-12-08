@@ -15,7 +15,7 @@ class Day08 < Solver
   end
 
   def width_and_height
-    @data ? [2, 2] : [25, 6]
+    @test_data ? [2, 2] : [25, 6]
   end
 
   def image

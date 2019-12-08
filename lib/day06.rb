@@ -10,7 +10,7 @@ class Day06 < Solver
   end
 
   def run_two
-    return OrbitGraph.new(data).build.distance_by_name(['L', 'D']) if @data
+    return OrbitGraph.new(data).build.distance_by_name(['L', 'D']) if @test_data
     OrbitGraph.new(data).build.distance_by_name(['YOU', 'SAN'])
   end
 end
