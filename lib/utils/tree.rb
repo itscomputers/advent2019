@@ -27,8 +27,9 @@ end
 class Tree
   attr_reader :nodes
 
-  def initialize(edge_strings=[])
+  def initialize(edge_strings=[], edge_separator='->')
     @edge_strings = edge_strings
+    @edge_separator = edge_separator
     @nodes = Hash.new
     build
   end
@@ -38,7 +39,7 @@ class Tree
   end
 
   def build_edge(edge_string)
-    parent, node = edge_string.split('->').map(&method(:get_node))
+    parent, node = edge_string.split(@edge_separator).map(&method(:get_node))
     node.parent = parent
   end
 
