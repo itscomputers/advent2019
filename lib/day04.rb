@@ -7,18 +7,11 @@ class Day04 < Solver
   end
 
   def run_one
-    (lower_bound..upper_bound).count { |n| acceptable? n.to_s, part: 1 }
+    all_digit_counts.count(&method(:has_repeat?))
   end
 
   def run_two
-    (lower_bound..upper_bound).count { |n| acceptable? n.to_s, part: 2 }
-  end
-
-  def acceptable?(password, part:)
-    matching = in_range(password) && is_increasing(password)
-    matching &&= digit_counts(password).values.max >= 2 if part == 1
-    matching &&= digit_counts(password).values.include?(2) if part == 2
-    matching
+    all_digit_counts.count(&method(:has_double?))
   end
 
   def bounds
@@ -33,16 +26,28 @@ class Day04 < Solver
     bounds.last
   end
 
-  def in_range(password)
-    lower_bound <= password && password <= upper_bound
+  def is_increasing?(password)
+    password.split('').each_cons(2).inject(true) { |bool, pair| bool && pair.reduce(:<=) }
   end
 
-  def digit_counts(password)
-    password.split('').count_by(&:to_s)
+  def increasing_passwords
+    @increasing_passwords ||= (lower_bound..upper_bound).select(&method(:is_increasing?))
   end
 
-  def is_increasing(password)
-    (0...5).map { |i| password[i] <= password[i+1] }.all?
+  def digit_counts_of(password)
+    password.split('').count_by(&:itself)
+  end
+
+  def all_digit_counts
+    @all_digit_counts ||= increasing_passwords.map(&method(:digit_counts_of))
+  end
+
+  def has_repeat?(counts)
+    counts.values.max >= 2
+  end
+
+  def has_double?(counts)
+    counts.values.include? 2
   end
 end
 

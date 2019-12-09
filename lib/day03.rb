@@ -27,11 +27,7 @@ class Day03 < Solver
   end
 
   def both_points
-    @both_points ||= build_points
-  end
-
-  def build_points
-    data.map(&method(:parse_path))
+    @both_points ||= data.map(&method(:parse_path))
   end
 
   def parse_move(dir_str)
