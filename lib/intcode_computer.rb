@@ -52,7 +52,7 @@ class IntcodeComputer
   #---------------------------
 
   def advance
-    eval("#{instruction_op}(#{instruction_params})")
+    instruction_op.call(instruction_params)
     self
   end
 
@@ -80,15 +80,15 @@ class IntcodeComputer
 
   def instruction_router
     {
-      1 => { :length => 4, :op => 'add' },
-      2 => { :length => 4, :op => 'multiply' },
-      3 => { :length => 2, :op => 'write_from_input' },
-      4 => { :length => 2, :op => 'write_to_output' },
-      5 => { :length => 3, :op => 'jump_if_true' },
-      6 => { :length => 3, :op => 'jump_if_false' },
-      7 => { :length => 4, :op => 'less_than' },
-      8 => { :length => 4, :op => 'equals' },
-      99 => { :length => 0, :op => 'halt_program' },
+      1 => { :length => 4, :op => lambda { |_| add(_) } },
+      2 => { :length => 4, :op => lambda { |_| multiply(_) } },
+      3 => { :length => 2, :op => lambda { |_| write_from_input(_) } },
+      4 => { :length => 2, :op => lambda { |_| write_to_output(_) } },
+      5 => { :length => 3, :op => lambda { |_| jump_if(true, _) } },
+      6 => { :length => 3, :op => lambda { |_| jump_if(false, _) } },
+      7 => { :length => 4, :op => lambda { |_| less_than(_) } },
+      8 => { :length => 4, :op => lambda { |_| equals(_) } },
+      99 => { :length => 0, :op => lambda { |_| @terminated = true } },
     }
   end
 
@@ -152,56 +152,50 @@ class IntcodeComputer
     @pointer = value
   end
 
-  def add(params)
+  def binary_operator(operation, params)
+    *inputs, output_pointer = params
+    set(output_pointer, inputs.inject(operation))
+  end
+
+  def binary_boolean_operator(operation, params)
+    *inputs, output_pointer = params
+    set(output_pointer, inputs.inject(operation) ? 1 : 0)
+  end
+
+  def jump_after
     jump = instruction_pointer_jump
-    set(params.last, params[0...-1].reduce(0, :+))
+    yield
     move_pointer_by(jump)
+  end
+
+  def add(params)
+    jump_after { binary_operator(:+, params) }
   end
 
   def multiply(params)
-    jump = instruction_pointer_jump
-    set(params.last, params[0...-1].reduce(1, :*))
-    move_pointer_by(jump)
+    jump_after { binary_operator(:*, params) }
   end
 
   def write_from_input(params)
-    jump = instruction_pointer_jump
-    set(params.first, next_input)
-    move_pointer_by(jump)
+    jump_after { set(params.first, next_input) }
   end
 
   def write_to_output(params)
-    jump = instruction_pointer_jump
-    @outputs = @outputs + params
-    move_pointer_by(jump)
+    jump_after { @outputs = @outputs + params }
   end
 
-  def jump_if_true(params)
-    (params.first != 0) ?
-      move_pointer_to(params.last) :
-      move_pointer_by(instruction_pointer_jump)
-  end
-
-  def jump_if_false(params)
-    (params.first == 0) ?
+  def jump_if(bool, params)
+    (bool ? params.first != 0 : params.first == 0) ?
       move_pointer_to(params.last) :
       move_pointer_by(instruction_pointer_jump)
   end
 
   def less_than(params)
-    jump = instruction_pointer_jump
-    set(params.last, (params.first < params[1]) ? 1 : 0)
-    move_pointer_by(jump)
+    jump_after { binary_boolean_operator(:<, params) }
   end
 
   def equals(params)
-    jump = instruction_pointer_jump
-    set(params.last, (params.first == params[1]) ? 1 : 0)
-    move_pointer_by(jump)
-  end
-
-  def halt_program(params)
-    @terminated = true
+    jump_after { binary_boolean_operator(:==, params) }
   end
 end
 
