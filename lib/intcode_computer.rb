@@ -23,6 +23,7 @@ class IntcodeComputer
   def set_initial_state
     @result = @program.map.with_index { |val, idx| [idx, val] }.to_h
     @pointer = 0
+    @relative_base = 0
     @outputs = []
     @terminated = false
   end
@@ -47,22 +48,18 @@ class IntcodeComputer
     @default_input
   end
 
-  def current_state
-    @result.values
-  end
-
   #---------------------------
   # run the program
   #---------------------------
 
   def advance
-    instruction_op.call(instruction_params)
+    instr_op.call
     self
   end
 
   def advance_to_next_output
     until @terminated
-      break_after_advance = will_write_to_output
+      break_after_advance = will_write_to_output?
       advance
       break if break_after_advance
     end
@@ -78,11 +75,15 @@ class IntcodeComputer
     @outputs.last
   end
 
+  def current_state
+    @result.values
+  end
+
   #---------------------------
   # handle instruction
   #---------------------------
 
-  def instruction_router
+  def instr_router
     {
       1 => { :length => 4, :op => method(:add) },
       2 => { :length => 4, :op => method(:multiply) },
@@ -92,48 +93,55 @@ class IntcodeComputer
       6 => { :length => 3, :op => method(:jump_if_false) },
       7 => { :length => 4, :op => method(:less_than) },
       8 => { :length => 4, :op => method(:equals) },
+      9 => { :length => 2, :op => method(:relative_base_offset) },
       99 => { :length => 0, :op => method(:halt_program) },
     }
   end
 
-  def instruction_op
-    instruction_router[instruction_op_id][:op]
-  end
-
-  def instruction_pointer_jump
-    instruction_router[instruction_op_id][:length]
-  end
-
-  def instruction_raw
-    @result.slice(*(@pointer...@pointer+instruction_pointer_jump)).values
-  end
-
-  def instruction_op_id
+  def instr_op_id
     get(@pointer) % 100
   end
 
-  def instruction_modes
+  def instr_op
+    instr_router[instr_op_id][:op]
+  end
+
+  def instr_length
+    instr_router[instr_op_id][:length]
+  end
+
+  def instr_params
+    @result.slice(*(@pointer+1...@pointer+instr_length)).values
+  end
+
+  def instr_modes
     (get(@pointer) / 100).to_s.split('').reverse
   end
 
-  def instruction_raw_params
-    instruction_raw.drop(1)
-  end
-
-  def instruction_params
-    [4, 5, 6].include?(instruction_op_id) ?
-      transform(instruction_raw_params) :
-      transform(instruction_raw_params[0...-1]) + [instruction_raw_params.last]
-  end
-
-  def transform(params)
-    params.zip(instruction_modes).map do |pair|
-      pair.last == '1' ? pair.first : get(pair.first)
+  def transform(params, modes)
+    params.zip(modes).map do |pair|
+      transform_single(*pair)
     end
   end
 
-  def will_write_to_output
-    instruction_op_id == 4
+  def transform_single(param, mode)
+    if mode == '1'
+      param
+    elsif mode == '2'
+      get(@relative_base + param)
+    else
+      get(param)
+    end
+  end
+
+  def transform_output(pointer)
+    (instr_modes.count == instr_params.count && instr_modes.last == '2') ?
+      pointer + @relative_base :
+      pointer
+  end
+
+  def will_write_to_output?
+    instr_op_id == 4
   end
 
   #---------------------------
@@ -156,61 +164,71 @@ class IntcodeComputer
     @pointer = value
   end
 
-  def binary_operator(operation, params)
-    *inputs, output_pointer = params
+  def binary_operator(operation)
+    *inputs, output_pointer = instr_params
+    inputs = transform(inputs, instr_modes)
+    output_pointer = transform_output(output_pointer)
     set(output_pointer, inputs.inject(operation))
   end
 
-  def binary_boolean_operator(operation, params)
-    *inputs, output_pointer = params
+  def binary_boolean_operator(operation)
+    *inputs, output_pointer = instr_params
+    inputs = transform(inputs, instr_modes)
+    output_pointer = transform_output(output_pointer)
     set(output_pointer, inputs.inject(operation) ? 1 : 0)
   end
 
   def jump_after
-    jump = instruction_pointer_jump
+    jump = instr_length
     yield
     move_pointer_by(jump)
   end
 
-  def add(params)
-    jump_after { binary_operator(:+, params) }
+  def add
+    jump_after { binary_operator(:+) }
   end
 
-  def multiply(params)
-    jump_after { binary_operator(:*, params) }
+  def multiply
+    jump_after { binary_operator(:*) }
   end
 
-  def write_from_input(params)
-    jump_after { set(params.first, next_input) }
+  def write_from_input
+    output_pointer = transform_output(instr_params.last)
+    jump_after { set(output_pointer, next_input) }
   end
 
-  def write_to_output(params)
-    jump_after { @outputs = @outputs + params }
+  def write_to_output
+    jump_after { @outputs = @outputs + transform(instr_params, instr_modes) }
   end
 
-  def jump_if(bool, params)
+  def jump_if(bool)
+    params = transform(instr_params, instr_modes)
     (bool ? params.first != 0 : params.first == 0) ?
       move_pointer_to(params.last) :
-      move_pointer_by(instruction_pointer_jump)
+      move_pointer_by(instr_length)
   end
 
-  def jump_if_true(params)
-    jump_if(true, params)
+  def jump_if_true
+    jump_if(true)
   end
 
-  def jump_if_false(params)
-    jump_if(false, params)
+  def jump_if_false
+    jump_if(false)
   end
 
-  def less_than(params)
-    jump_after { binary_boolean_operator(:<, params) }
+  def less_than
+    jump_after { binary_boolean_operator(:<) }
   end
 
-  def equals(params)
-    jump_after { binary_boolean_operator(:==, params) }
+  def equals
+    jump_after { binary_boolean_operator(:==) }
   end
 
-  def halt_program(params)
+  def relative_base_offset
+    jump_after { @relative_base = @relative_base + transform(instr_params, instr_modes).first }
+  end
+
+  def halt_program
     @terminated = true
   end
 end

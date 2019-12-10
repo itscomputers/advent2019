@@ -165,13 +165,16 @@ class TestIntcodeComputer < MiniTest::Test
   end
 
   def test_case_1
-    c = computer([1002, 4, 3, 4, 33])
-    assert_equal c.run.current_state, [1002, 4, 3, 4, 99]
+    assert_equal computer([1002, 4, 3, 4, 33]).run.current_state, [1002, 4, 3, 4, 99]
   end
 
   def test_case_2
-    c = computer([1101, 100, -1, 4, 0])
-    assert_equal c.run.current_state, [1101, 100, -1, 4, 99]
+    assert_equal computer([1101, 100, -1, 4, 0]).run.current_state, [1101, 100, -1, 4, 99]
+  end
+
+  def test_case_3
+    test_data = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
+    assert_equal IntcodeComputer.run(program: test_data).outputs, test_data
   end
 end
 
