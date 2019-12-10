@@ -1,7 +1,7 @@
 class IntcodeComputer
-  attr_reader :inputs, :output, :pointer, :result, :terminated
+  attr_reader :inputs, :outputs, :pointer, :result, :terminated
 
-  def self.run(program:, inputs: nil, default_input: nil)
+  def self.run(program:, inputs: [], default_input: nil)
     self.new(
       program: program,
       inputs: inputs,
@@ -13,7 +13,7 @@ class IntcodeComputer
   # set and reset state
   #---------------------------
 
-  def initialize(program:, inputs: nil, default_input: nil)
+  def initialize(program:, inputs: [], default_input: nil)
     @program = program
     @inputs = inputs.to_enum
     @default_input = default_input
@@ -21,7 +21,7 @@ class IntcodeComputer
   end
 
   def set_initial_state
-    @result = @program.map(&:dup)
+    @result = @program.map.with_index { |val, idx| [idx, val] }.to_h
     @pointer = 0
     @outputs = []
     @terminated = false
@@ -45,6 +45,10 @@ class IntcodeComputer
     return @inputs.next
   rescue StopIteration
     @default_input
+  end
+
+  def current_state
+    @result.values
   end
 
   #---------------------------
@@ -80,15 +84,15 @@ class IntcodeComputer
 
   def instruction_router
     {
-      1 => { :length => 4, :op => lambda { |_| add(_) } },
-      2 => { :length => 4, :op => lambda { |_| multiply(_) } },
-      3 => { :length => 2, :op => lambda { |_| write_from_input(_) } },
-      4 => { :length => 2, :op => lambda { |_| write_to_output(_) } },
-      5 => { :length => 3, :op => lambda { |_| jump_if(true, _) } },
-      6 => { :length => 3, :op => lambda { |_| jump_if(false, _) } },
-      7 => { :length => 4, :op => lambda { |_| less_than(_) } },
-      8 => { :length => 4, :op => lambda { |_| equals(_) } },
-      99 => { :length => 0, :op => lambda { |_| @terminated = true } },
+      1 => { :length => 4, :op => method(:add) },
+      2 => { :length => 4, :op => method(:multiply) },
+      3 => { :length => 2, :op => method(:write_from_input) },
+      4 => { :length => 2, :op => method(:write_to_output) },
+      5 => { :length => 3, :op => method(:jump_if_true) },
+      6 => { :length => 3, :op => method(:jump_if_false) },
+      7 => { :length => 4, :op => method(:less_than) },
+      8 => { :length => 4, :op => method(:equals) },
+      99 => { :length => 0, :op => method(:halt_program) },
     }
   end
 
@@ -101,7 +105,7 @@ class IntcodeComputer
   end
 
   def instruction_raw
-    @result.slice(@pointer, instruction_pointer_jump)
+    @result.slice(*(@pointer...@pointer+instruction_pointer_jump)).values
   end
 
   def instruction_op_id
@@ -141,7 +145,7 @@ class IntcodeComputer
   end
 
   def get(pointer)
-    @result[pointer]
+    @result[pointer] || 0
   end
 
   def move_pointer_by(value)
@@ -190,12 +194,24 @@ class IntcodeComputer
       move_pointer_by(instruction_pointer_jump)
   end
 
+  def jump_if_true(params)
+    jump_if(true, params)
+  end
+
+  def jump_if_false(params)
+    jump_if(false, params)
+  end
+
   def less_than(params)
     jump_after { binary_boolean_operator(:<, params) }
   end
 
   def equals(params)
     jump_after { binary_boolean_operator(:==, params) }
+  end
+
+  def halt_program(params)
+    @terminated = true
   end
 end
 

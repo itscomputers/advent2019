@@ -9,15 +9,15 @@ class Day02 < Solver
   end
 
   def run_one
-    return run_program.result if @test_data
-    run_program(inputs: [12, 2]).result.first
+    return run_program.current_state if @test_data
+    run_program(inputs: [12, 2]).current_state.first
   end
 
   def run_two
     return Utils.vector_dot([100, 1], linear_diophantine_solution)
   rescue 'NotArithmeticSequences'
     (0..99).to_a.product((0..99).to_a).each do |inputs|
-      if run_program(inputs: inputs).result.first == desired_output
+      if run_program(inputs: inputs).current_state.first == desired_output
         return Utils.dot_product([100, 1], *inputs)
       end
     end
@@ -41,14 +41,14 @@ class Day02 < Solver
   end
 
   def initial_output
-    @initial_output ||= run_program.result.first
+    @initial_output ||= run_program.current_state.first
   end
 
   def arithmetic_differences
     prevs = [initial_output, initial_output]
     differences = (1..99).map do |i|
       currs = [[i, 0], [0, i]].map do |inputs|
-        run_program(inputs: inputs).result.first
+        run_program(inputs: inputs).current_state.first
       end
       diffs = currs.zip(prevs).map { |pair| pair.first - pair.last }
       prevs = currs
