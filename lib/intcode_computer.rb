@@ -128,13 +128,13 @@ class IntcodeComputer
     if mode == '1'
       param
     elsif mode == '2'
-      get(@relative_base + param)
+      get(param + @relative_base)
     else
       get(param)
     end
   end
 
-  def transform_output(pointer)
+  def relative_output(pointer)
     (instr_modes.count == instr_params.count && instr_modes.last == '2') ?
       pointer + @relative_base :
       pointer
@@ -167,14 +167,14 @@ class IntcodeComputer
   def binary_operator(operation)
     *inputs, output_pointer = instr_params
     inputs = transform(inputs, instr_modes)
-    output_pointer = transform_output(output_pointer)
+    output_pointer = relative_output(output_pointer)
     set(output_pointer, inputs.inject(operation))
   end
 
   def binary_boolean_operator(operation)
     *inputs, output_pointer = instr_params
     inputs = transform(inputs, instr_modes)
-    output_pointer = transform_output(output_pointer)
+    output_pointer = relative_output(output_pointer)
     set(output_pointer, inputs.inject(operation) ? 1 : 0)
   end
 
@@ -193,7 +193,7 @@ class IntcodeComputer
   end
 
   def write_from_input
-    output_pointer = transform_output(instr_params.last)
+    output_pointer = relative_output(instr_params.last)
     jump_after { set(output_pointer, next_input) }
   end
 
