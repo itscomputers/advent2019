@@ -23,7 +23,7 @@ class EmergencyShipHullPainter
     @computer = IntcodeComputer.new(program: program, default_input: input)
     @colors = Hash.new
     @position = [0, 0]
-    @direction = [0, 1]
+    @direction = [0, -1]
   end
 
   def next_output
@@ -31,30 +31,19 @@ class EmergencyShipHullPainter
     @computer.output
   end
 
-  def paint
+  def paint_panel
     @colors[@position] = next_output
   end
 
-  def change_direction
-    sign = (-1)**next_output
-    @direction = [[0, sign * 1], [-sign * 1, 0]].map do |row|
-      Utils.vector_dot(row, @direction)
-    end
-  end
-
-  def move
+  def move_to_next_panel
+    @direction = Utils.grid_rotate(@direction, next_output == 1 ? 'cw' : 'ccw')
     @position = Utils.vector_add(@position, @direction)
-  end
-
-  def get_input
     @computer.default_input = @colors[@position] || 0
   end
 
   def advance
-    paint
-    change_direction
-    move
-    get_input
+    paint_panel
+    move_to_next_panel
   end
 
   def run
@@ -67,13 +56,11 @@ class EmergencyShipHullPainter
   end
 
   def x_range
-    x0, x1 = @colors.keys.map(&:first).minmax
-    (x0..x1).to_a.reverse
+    Range.new(*@colors.keys.map(&:first).minmax)
   end
 
   def y_range
-    y0, y1 = @colors.keys.map(&:last).minmax
-    (y0..y1).to_a.reverse
+    Range.new(*@colors.keys.map(&:last).minmax)
   end
 
   def display
