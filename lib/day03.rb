@@ -30,16 +30,17 @@ class Day03 < Solver
     @both_points ||= data.map(&method(:parse_path))
   end
 
-  def parse_move(dir_str)
+  def directions
     {
-      :dir => {
-        'R' => [1, 0],
-        'U' => [0, 1],
-        'L' => [-1, 0],
-        'D' => [0, -1],
-      }[dir_str[0]],
-      :num => dir_str[1..-1].to_i
+      'R' => [1, 0],
+      'U' => [0, 1],
+      'L' => [-1, 0],
+      'D' => [0, -1],
     }
+  end
+
+  def parse_move(dir_str)
+    [directions[dir_str[0]], dir_str[1..-1].to_i]
   end
 
   def parse_path(path)
@@ -47,7 +48,7 @@ class Day03 < Solver
     prev = [0, 0]
     signal_delay = 0
     path.split(',').each_with_index do |dir_str, idx|
-      dir, num = parse_move(dir_str).values
+      dir, num = parse_move(dir_str)
       (1..num).each do |j|
         curr = Utils.vector_add(prev, dir)
         points[curr] ||= signal_delay + j
