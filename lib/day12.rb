@@ -41,9 +41,8 @@ end
 class Graviton
   attr_reader :positions, :velocities
 
-  def initialize(initial_positions)
-    @initial_positions = initial_positions
-    @positions = initial_positions.map(&:dup)
+  def initialize(positions)
+    @positions = positions
     @step = 1
     @velocities = [0, 0, 0, 0]
   end
@@ -71,8 +70,8 @@ class Graviton
 
   def find_repeat
     advance
-    advance until @positions == @initial_positions
-    @step
+    advance until @velocities == [0, 0, 0, 0]
+    2 * @step
   end
 end
 
