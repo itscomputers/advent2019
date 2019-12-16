@@ -59,11 +59,25 @@ class IntcodeComputer
 
   def advance_to_next_output
     until @terminated
-      break_after_advance = will_write_to_output?
+      break_after_advance = will_write?
       advance
       break if break_after_advance
     end
     self
+  end
+
+  def advance_to_next_input
+    advance until @terminated || will_read?
+    self
+  end
+
+  def advance_to_next_io
+    advance until @terminated || will_read? || will_write?
+    return 'input' if will_read?
+    if will_write?
+      advance
+      return 'output'
+    end
   end
 
   def run
@@ -87,8 +101,8 @@ class IntcodeComputer
     {
       1 => { :length => 4, :op => method(:add) },
       2 => { :length => 4, :op => method(:multiply) },
-      3 => { :length => 2, :op => method(:write_from_input) },
-      4 => { :length => 2, :op => method(:write_to_output) },
+      3 => { :length => 2, :op => method(:read_input) },
+      4 => { :length => 2, :op => method(:write_output) },
       5 => { :length => 3, :op => method(:jump_if_true) },
       6 => { :length => 3, :op => method(:jump_if_false) },
       7 => { :length => 4, :op => method(:less_than) },
@@ -140,8 +154,12 @@ class IntcodeComputer
       pointer
   end
 
-  def will_write_to_output?
+  def will_write?
     instr_op_id == 4
+  end
+
+  def will_read?
+    instr_op_id == 3
   end
 
   #---------------------------
@@ -192,12 +210,12 @@ class IntcodeComputer
     jump_after { binary_operator(:*) }
   end
 
-  def write_from_input
+  def read_input
     output_pointer = relative_output(instr_params.last)
     jump_after { set(output_pointer, next_input) }
   end
 
-  def write_to_output
+  def write_output
     jump_after { @outputs = @outputs + transform(instr_params, instr_modes) }
   end
 
