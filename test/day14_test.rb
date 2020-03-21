@@ -24,19 +24,19 @@ class TestDay14 < MiniTest::Test
     ]
   end
 
-  def test_parse_reaction
-    assert_equal(
-      Day14.new(@testing_data.first).reactions,
-      {
-        'A' => { 'ORE' => [10, 10] },
-        'B' => { 'ORE' => [1, 1] },
-        'C' => { 'A' => [7, 1], 'B' => [1, 1] },
-        'D' => { 'A' => [7, 1], 'C' => [1, 1] },
-        'E' => { 'A' => [7, 1], 'D' => [1, 1] },
-        'FUEL' => { 'A' => [7, 1], 'E' => [1, 1] },
-      }
-    )
-  end
+# def test_parse_reaction
+#   assert_equal(
+#     Day14.new(@testing_data.first).reactions,
+#     {
+#       'A' => { 'ORE' => [10, 10] },
+#       'B' => { 'ORE' => [1, 1] },
+#       'C' => { 'A' => [7, 1], 'B' => [1, 1] },
+#       'D' => { 'A' => [7, 1], 'C' => [1, 1] },
+#       'E' => { 'A' => [7, 1], 'D' => [1, 1] },
+#       'FUEL' => { 'A' => [7, 1], 'E' => [1, 1] },
+#     }
+#   )
+# end
 
   def test_resolve
     assert_equal Day14.new(@testing_data.first).resolve, 31

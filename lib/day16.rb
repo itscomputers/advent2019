@@ -16,9 +16,8 @@ class Day16 < Solver
 
   def run_two
     FlawedFrequencyTransmission
-      .new((data * 10000).flatten)
-      .reverse_after_phase(100)
-      .truncate_reverse_signal
+      .new(data)
+      .truncated_offset_after_phase_100
   end
 end
 
@@ -54,29 +53,71 @@ class FlawedFrequencyTransmission
     @input_signal.take(8).join('')
   end
 
-  def reverse_signal_size
-    @size - @input_signal.take(7).join('').to_i
+  def offset
+    @offset ||= @input_signal.take(7).join('').to_i
   end
 
-  def get_reverse_signal
-    @reverse_signal = @input_signal.reverse.take(reverse_signal_size)
+  def offset_size
+    @offset_size ||= 10000 * @size - offset
   end
 
-  def transform_reverse_signal
-    @reverse_signal = @reverse_signal.inject([]) do |array, x|
-      array + [((array.last || 0) + x) % 10]
-    end
-    self
+  def offset_signal
+    @offset_signal ||= @input_signal.reverse.cycle.take(offset_size).reverse
   end
 
-  def reverse_after_phase(k)
-    get_reverse_signal
-    k.times { transform_reverse_signal }
-    self
+  def apply(value, index, row)
+    row[index] ? value * row[index] % 10 : 0
   end
 
-  def truncate_reverse_signal
-    @reverse_signal.reverse.take(8).join('')
+  def first_five_entries(row)
+    (1..7).map do |x|
+      x * 4
+    end.map do |i|
+      apply(5, i, row)
+    end.sum % 10
+  end
+
+  def five_entries(row)
+    (row.count / 128).times.map do |j|
+      (0..7).map do |i|
+        128*(j + 1) + 4*i
+      end
+    end.flatten.map do |i|
+      apply(5, i, row)
+    end.sum % 10
+  end
+
+  def four_entries(row)
+    (row.count/ 400).times.map do |j|
+      (1..3).map do |i|
+        -100 + 500*j + 125*i
+      end
+    end.flatten.map do |i|
+      apply(4, i, row)
+    end.sum % 10
+  end
+
+  def nine_entries(row)
+    (row.count / 400).times.map do |j|
+      400 + 500*j
+    end.map do |i|
+      apply(9, i, row)
+    end.sum % 10
+  end
+
+  def entry_row(i)
+    row = offset_signal.drop(i)
+    (row.first + first_five_entries(row) + five_entries(row) + four_entries(row) + nine_entries(row)) % 10
+  end
+
+  def offset_transform(i)
+    (0..7).map { |i| entry_row(i) }.join('')
+  end
+
+  def truncated_offset_after_phase_100
+    8.times.map do |i|
+      entry_row(i)
+    end.join('')
   end
 end
 
