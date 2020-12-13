@@ -1,3 +1,3 @@
-module Advent2019
+module Advent
   VERSION = "0.1.0"
 end
