@@ -12,7 +12,7 @@ class Day17 < Solver
   end
 
   def run_two
-    IntcodeComputer.run(program: [2] + data.drop(1)).output
+    IntcodeComputer.new(program: [2, *data.drop(1)], inputs: inputs).run.output
   end
 
   def ascii
@@ -20,15 +20,11 @@ class Day17 < Solver
   end
 
   def movement_instructions
-    @instructions ||= ScaffoldVisitor.new(
-      ascii.scaffold,
-      ascii.initial_position,
-      ascii.initial_direction,
-    ).movement_instructions
+    ScaffoldVisitor.new(ascii).movement_instructions
   end
 
   def inputs
-    @inputs ||= MovementBuilder.new(movement_instructions).movement
+    InputsBuilder.new(movement_instructions).inputs
   end
 end
 
@@ -64,6 +60,10 @@ class ASCII
     @grid
   end
 
+  def scaffold_at?(point)
+    grid[point] == '#'
+  end
+
   def scaffold
     @scaffold ||= grid.keys.select { |k| grid[k] == '#' }
   end
@@ -93,10 +93,10 @@ end
 class ScaffoldVisitor
   attr_reader :movement_instructions
 
-  def initialize(scaffold, initial_position, initial_direction)
-    @scaffold = scaffold
-    @position = initial_position
-    @direction = initial_direction
+  def initialize(ascii)
+    @ascii = ascii
+    @position = ascii.initial_position
+    @direction = ascii.initial_direction
     @movement_instructions = []
     @end_of_path = false
   end
@@ -106,7 +106,7 @@ class ScaffoldVisitor
   end
 
   def can_move_forward_one?
-    @scaffold.include? forward_one
+    @ascii.scaffold_at? forward_one
   end
 
   def move_forward_one
@@ -135,11 +135,11 @@ class ScaffoldVisitor
   end
 
   def can_turn_left?
-    @scaffold.include? Utils.vector_add(@position, left_turn)
+    @ascii.scaffold_at? Utils.vector_add(@position, left_turn)
   end
 
   def can_turn_right?
-    @scaffold.include? Utils.vector_add(@position, right_turn)
+    @ascii.scaffold_at? Utils.vector_add(@position, right_turn)
   end
 
   def turn_left
@@ -172,7 +172,7 @@ class ScaffoldVisitor
   end
 end
 
-class MovementBuilder
+class InputsBuilder
   attr_reader :instructions, :partition
 
   def initialize(instructions)
@@ -180,32 +180,40 @@ class MovementBuilder
   end
 
   def main_routine
-    insert_commas_and_return(%w(A A B A C B).map(&:ord))
+    %w(A B A B C A B C A C)
   end
 
   def movement_functions
     [
-      @instructions.slice(0, 14),
-      @instructions.slice(28, 8),
-      @instructions.slice(50, 14),
-    ].map do |instructions|
-      insert_commas_and_return(instructions.map(&:to_s).map(&:ord))
+      @instructions.slice(0, 6), # 0, 15
+      @instructions.slice(6, 8), # 30, 9
+      @instructions.slice(28, 8), # 54, 16
+    ]
+  end
+
+  def insert_commas_and_new_line(array)
+    new_array = array.inject([]) { |arr, val| [*arr, val.ord, 44] }
+    [*new_array[0...-1], 10]
+  end
+
+  def inputs
+    validate!
+    [
+      main_routine.join(","),
+      *movement_functions.map { |func| func.join(",") },
+      "n",
+      "",
+    ].join("\n").split("").map(&:ord)
+  end
+
+  def validate!
+    hash = %w(A B C).zip(movement_functions).each_with_object(Hash.new) do |(letter, func), memo|
+      memo[letter] = func
     end
-  end
-
-  def insert_commas_and_return(array)
-    new_array = array.inject([]) do |arr, val|
-      (arr + [val, 44]).flatten
+    instructions = main_routine.reduce(Array.new) do |array, letter|
+      [*array, *hash[letter]]
     end
-    new_array[0...-1] + [10]
+    raise ArgumentError unless instructions == @instructions
   end
-
-  def movement
-    main_routine + movement_functions.flatten
-  end
-end
-
-def neighbors(x, y)
-  [[x + 1, y], [x - 1, y], [x, y - 1], [x, y + 1]]
 end
 
